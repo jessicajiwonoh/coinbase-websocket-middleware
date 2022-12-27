@@ -1,23 +1,24 @@
 import WebSocket from "ws";
-import { Views, supportedProducts } from "./common.js";
+import { supportedProducts, throwExpression } from "./common";
+import { L2UpdateChanges, ProductDataType, Subscriber, Subscribers, View } from "./types";
 
 const URL = "wss://ws-feed.exchange.coinbase.com";
 
 const ws = new WebSocket(URL);
 
-let productData = Object.fromEntries(
-  supportedProducts.map((productID, timestamp, tradeSize, productPrice) => [
+let productData: ProductDataType = Object.fromEntries(
+  supportedProducts.map((productID: string) => [
     productID,
-    { productID, bids: [], asks: [], timestamp, tradeSize, productPrice },
+    { productID, bids: [], asks: [], time: null, size: null, price: null },
   ])
 );
 
-let subscribers = new Map();
+let subscribers: Subscribers  = new Map();
 
 let matchProducts = new Set();
 
 // The createSubscriber function creates and returns an object representing a client that is subscribed to the server. 
-export function createSubscriber(id) {
+export function createSubscriber(id: string): Subscriber {
   return {
     id,
     currentView: null,
@@ -39,8 +40,8 @@ ws.on("open", () => {
 });
 
 // When the WebSocket connection receives a message, we parse it and determine its type. 
-ws.on("message", (raw) => {
-  const data = JSON.parse(raw);
+ws.on("message", (raw: WebSocket.RawData) => {
+  const data = JSON.parse(raw.toString());
   const { type } = data;
 
   switch (type) {
@@ -78,9 +79,11 @@ ws.on("close", () => {
   ws.close();
 });
 
-function handleL2Update({ product_id: productID, changes }) {
-  let newbids = [],
-    newasks = [];
+function handleL2Update({ product_id: productID, changes }: 
+  {product_id: string, changes: L2UpdateChanges}): void {
+
+  let newbids = [], newasks = [];
+
   for (let [side, price, size] of changes) {
     if (side === "buy") {
       newbids.push({ price, size });
@@ -102,17 +105,17 @@ function handleMatchUpdate({
   time: timestamp,
   size: tradeSize,
   price: productPrice,
-}) {
+}: { product_id: string, time: number, size: number, price: number }): void {
   productData[productID].time = timestamp;
   productData[productID].size = tradeSize;
   productData[productID].price = productPrice;
 }
 
 export function subscribeMatches(
-  view,
-  clientID,
-  productID,
-  clientSendFunction
+  view: View,
+  clientID: string,
+  productID: string,
+  clientSendFunction: (rawObject: Object) => void
 ) {
   let subscriber = subscribers.get(clientID);
 
@@ -123,12 +126,12 @@ export function subscribeMatches(
 
   subscriber.subscribedProducts.add(productID);
 
-  if (view === Views.Match) {
+  if (view === View.Match) {
     if (
-      subscriber.currentView !== Views.Match ||
+      subscriber.currentView !== View.Match ||
       !matchProducts.has(productID)
     ) {
-      subscriber.currentView = Views.Match;
+      subscriber.currentView = View.Match;
       clientSendFunction({
         productID,
         time: productData[productID].time,
@@ -140,7 +143,7 @@ export function subscribeMatches(
   }
 }
 
-export function subscribe(view, clientID, productID, clientSendFunction) {
+export function subscribe(view: View, clientID: string, productID: string, clientSendFunction: (rawObject: Object) => void) {
   let subscriber = subscribers.get(clientID);
 
   if (subscriber == null) {
@@ -150,15 +153,16 @@ export function subscribe(view, clientID, productID, clientSendFunction) {
 
   subscriber.subscribedProducts.add(productID);
 
-  if (view === Views.Price) {
+  if (view === View.Price) {
     // Kick off a publishing interval if the current view wasn't already Price
-    if (subscriber.currentView !== Views.Price) {
-      subscriber.currentView = Views.Price;
+    if (subscriber.currentView !== View.Price) {
+      subscriber.currentView = View.Price;
 
       (function publishOnInterval() {
-        const subscriber = subscribers.get(clientID);
-
-        if (subscriber.currentView === Views.Price) {
+        const subscriber = subscribers.get(clientID) 
+          ?? throwExpression(`Unexpected null clientID ${clientID}`);
+          
+        if (subscriber.currentView === View.Price) {
           for (let subscribedProduct of subscriber.subscribedProducts) {
             clientSendFunction({
               subscribedProduct,
@@ -166,7 +170,7 @@ export function subscribe(view, clientID, productID, clientSendFunction) {
               asks: productData[subscribedProduct].asks,
             });
           }
-          if (subscriber.subscribedProducts.length === 0) {
+          if (subscriber.subscribedProducts.size === 0) {
             return;
           }
           setTimeout(publishOnInterval, subscriber.refreshInterval);
@@ -176,7 +180,7 @@ export function subscribe(view, clientID, productID, clientSendFunction) {
   }
 }
 
-export function unsubscribe(clientID, productID) {
+export function unsubscribe(clientID: string, productID: string) {
   let subscriber = subscribers.get(clientID);
 
   if (subscriber == null) {
@@ -186,7 +190,7 @@ export function unsubscribe(clientID, productID) {
   subscriber.subscribedProducts.delete(productID);
 }
 
-export function showSystem(clientID, clientSendFunction) {
+export function showSystem(clientID: string, clientSendFunction: { (rawObject: Object): void; (arg0: { clientID: any; systemProducts: any[]; }): void; }) {
   let subscriber = subscribers.get(clientID);
   let systemProducts = [];
 
@@ -202,11 +206,13 @@ export function showSystem(clientID, clientSendFunction) {
 }
 
 export function changeRefreshInterval(
-  clientID,
-  refreshInterval,
-  clientSendFunction
-) {
-  let subscriber = subscribers.get(clientID);
+  clientID: string,
+  refreshInterval: number,
+  clientSendFunction: (rawObject: Object) => void
+): void {
+  let subscriber = subscribers.get(clientID) 
+    ?? throwExpression(`Unexpected null clientID ${clientID}`);
+
   subscriber.refreshInterval = refreshInterval;
 
   clientSendFunction(subscriber);

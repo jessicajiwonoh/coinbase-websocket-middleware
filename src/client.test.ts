@@ -28,7 +28,7 @@ describe("WebSocker server", () => {
 
   it("should handle a message event", () => {
     // Set up a mock function to capture the callback passed to the "message" event
-    const messageCallback = jest.fn();
+    let messageCallback = jest.fn();
 
     // Emit a "connection" event
     wss.emit("connection", {

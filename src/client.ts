@@ -1,13 +1,14 @@
 import { WebSocketServer } from "ws";
-import crypto from "crypto";
-import { supportedProducts, Views } from "./common.js";
+import * as crypto from "crypto"
+import { supportedProducts } from "./common";
 import {
   subscribe,
   subscribeMatches,
   unsubscribe,
   showSystem,
   changeRefreshInterval,
-} from "./coinbase.js";
+} from "../src/coinbase";
+import { View } from "./types";
 
 // Create a WebSocket server
 console.log("WebSocket server starting...");
@@ -19,7 +20,7 @@ wss.on("connection", (ws) => {
 
   const clientId = crypto.randomUUID();
 
-  function sendToClient(rawObject) {
+  function sendToClient(rawObject: Object): void {
     ws.send(JSON.stringify(rawObject));
   }
 
@@ -30,13 +31,11 @@ wss.on("connection", (ws) => {
     if (tokens[0] === "system") {
       // If there is a second token and it is a number, we change the refresh interval of the current view to that value. 
       if (tokens.length === 2) {
-        if (!isNaN(tokens[1])) {
-          const refreshInterval = tokens[1];
-          console.log(
-            `Changing the refresh interval of the current view to value: ${tokens[1]}`
-          );
-          changeRefreshInterval(clientId, refreshInterval, sendToClient);
-        }
+        const refreshInterval = parseInt(tokens[1]);
+        console.log(
+          `Changing the refresh interval of the current view to value: ${tokens[1]}`
+        );
+        changeRefreshInterval(clientId, refreshInterval, sendToClient);
       // If there is no second token, we show the system view. 
       } else if (tokens.length === 1) {
         showSystem(clientId, sendToClient);
@@ -58,7 +57,7 @@ wss.on("connection", (ws) => {
       if (tokens.length === 2) {
         // If it is "m", we subscribe to the matches view for the specified product.
         if (tokens[1] === "m") {
-          subscribeMatches(Views.Match, clientId, product, sendToClient);
+          subscribeMatches(View.Match, clientId, product, sendToClient);
         }
         // If it is "u", we unsubscribe from the specified product.
         if (tokens[1] === "u") {
@@ -66,7 +65,7 @@ wss.on("connection", (ws) => {
         }
       // If there is no second token, we subscribe to the price view for the specified product.
       } else if (tokens.length === 1) {
-        subscribe(Views.Price, clientId, product, sendToClient);
+        subscribe(View.Price, clientId, product, sendToClient);
       } else {
         console.log("Unsupported message, try again");
       }
