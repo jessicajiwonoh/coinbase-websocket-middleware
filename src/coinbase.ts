@@ -161,6 +161,7 @@ function handleMatchUpdate({
   } = { time: timestamp, size: tradeSize, price: productPrice });
 }
 
+// The subscribeMatches function sets up a subscription for a client, identified by their clientID.
 export function subscribeMatches(
   view: View,
   clientID: string,
@@ -176,6 +177,8 @@ export function subscribeMatches(
 
   subscriber.subscribedProducts.add(productID);
 
+  // If the view is View.Match, it sends the current state of the product to the client via clientSendFunction callback.
+  // It also updates the currentView and subscribedProducts properties of the subscriber object and adds the product to the matchProducts set.
   if (view === View.Match) {
     if (
       subscriber.currentView !== View.Match ||
@@ -200,6 +203,8 @@ export function subscribe(
   productID: Product,
   clientSendFunction: (rawObject: Object) => void,
 ) {
+  // Retrieve the subscriber object for the given client ID from the subscribers map.
+  // Or create a new subscriber object if it doesn't exist.
   let subscriber = subscribers.get(clientID);
 
   if (subscriber == null) {
@@ -207,6 +212,7 @@ export function subscribe(
     subscribers.set(clientID, subscriber);
   }
 
+  // Add the given product to the subscribedProducts set.
   subscriber.subscribedProducts.add(productID);
 
   if (view === View.Price) {
@@ -237,6 +243,7 @@ export function subscribe(
   }
 }
 
+// The unsubscribe function removes a subscription for a client to stop receiving updates for a given product.
 export function unsubscribe(clientID: string, productID: Product) {
   let subscriber = subscribers.get(clientID);
 
@@ -244,14 +251,18 @@ export function unsubscribe(clientID: string, productID: Product) {
     console.log('There is no subscriber...');
     return;
   }
+
+  // Remove the given product from the subscribedProducts set.
   subscriber.subscribedProducts.delete(productID);
 }
 
+// The showSystem function sends a list of the subscribed products for a client, identified by their clientID, to the client.
 export function showSystem(
   clientID: string,
   clientSendFunction: (rawObject: Object) => void,
 ) {
   let subscriber = subscribers.get(clientID);
+  // Create an empty array to hold the subscribed products of the subscriber object.
   let systemProducts = [];
 
   if (subscriber == null) {
@@ -274,6 +285,7 @@ export function changeRefreshInterval(
     subscribers.get(clientID) ??
     throwExpression(`Unexpected null clientID ${clientID}`);
 
+  // Update the refreshInterval property of the subscriber object with the given refresh interval.
   subscriber.refreshInterval = refreshInterval;
 
   clientSendFunction(subscriber);
