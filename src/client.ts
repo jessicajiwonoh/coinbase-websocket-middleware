@@ -1,6 +1,5 @@
 import { WebSocketServer } from "ws";
 import * as crypto from "crypto"
-import { supportedProducts } from "./common";
 import {
   subscribe,
   subscribeMatches,
@@ -8,7 +7,7 @@ import {
   showSystem,
   changeRefreshInterval,
 } from "../src/coinbase";
-import { View } from "./types";
+import { Product, View } from "./types";
 
 // Create a WebSocket server
 console.log("WebSocket server starting...");
@@ -50,8 +49,8 @@ wss.on("connection", (ws) => {
     }
 
     // If the first token of the message is in the supportedProducts array, we store it in the `product` variable.
-    if (supportedProducts.includes(tokens[0])) {
-      const product = tokens[0];
+    if ((Object.values(Product) as string[]).includes(tokens[0])) {
+      const product = tokens[0] as Product;
 
       // If there is a second token, we check if it is "m" or "u".
       if (tokens.length === 2) {

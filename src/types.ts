@@ -3,9 +3,17 @@ export enum View {
   Match,
 }
 
+export enum Product { 
+  BTCUSD = 'BTC-USD',
+  ETHUSD = 'ETH-USD',
+  LTCUSD = 'LTC-USD'
+  /*'XRP-USD', */
+}
+
+
 export type ProductDataType = {
-    [productID: string] : {
-      productID: string,
+    [productID in Product] : {
+      productID: productID,
       bids: { price: number, size: number }[],
       asks: { price: number, size: number }[],
       time: number | null,
@@ -18,7 +26,7 @@ export type Subscriber = {
   id: string,
   currentView: View | null,
   refreshInterval: number,
-  subscribedProducts: Set<string>,
+  subscribedProducts: Set<Product>,
 }
 
 export type Subscribers = Map<string, Subscriber>

@@ -1,21 +1,29 @@
 import WebSocket from "ws";
-import { supportedProducts, throwExpression } from "./common";
-import { L2UpdateChanges, ProductDataType, Subscriber, Subscribers, View } from "./types";
+import { throwExpression } from "./common";
+import { L2UpdateChanges, Product, ProductDataType, Subscriber, Subscribers, View } from "./types";
 
 const URL = "wss://ws-feed.exchange.coinbase.com";
 
 const ws = new WebSocket(URL);
 
-let productData: ProductDataType = Object.fromEntries(
-  supportedProducts.map((productID: string) => [
-    productID,
-    { productID, bids: [], asks: [], time: null, size: null, price: null },
-  ])
-);
+const productDataPrototype = { bids: [], asks: [], time: null, size: null, price: null };
+
+const productData: ProductDataType = {
+  'BTC-USD' : Object.assign(Object.create(productDataPrototype), { productID: 'BTC-USD'}),
+  'ETH-USD' : Object.assign(Object.create(productDataPrototype), { productID: 'ETH-USD'}),
+  'LTC-USD' : Object.assign(Object.create(productDataPrototype), { productID: 'LTC-USD'}),
+}
+
+// let productData: ProductDataType = Object.fromEntries(
+//   Object.values(Product).map((productID: string) => [
+//     productID,
+//     { productID, bids: [], asks: [], time: null, size: null, price: null },
+//   ])
+// );
 
 let subscribers: Subscribers  = new Map();
 
-let matchProducts = new Set();
+let matchProducts: Set<Product> = new Set();
 
 // The createSubscriber function creates and returns an object representing a client that is subscribed to the server. 
 export function createSubscriber(id: string): Subscriber {
@@ -33,7 +41,7 @@ ws.on("open", () => {
   ws.send(
     JSON.stringify({
       type: "subscribe",
-      product_ids: supportedProducts,
+      product_ids: Object.values(Product),
       channels: ["level2", "matches"],
     })
   );
@@ -80,7 +88,7 @@ ws.on("close", () => {
 });
 
 function handleL2Update({ product_id: productID, changes }: 
-  {product_id: string, changes: L2UpdateChanges}): void {
+  {product_id: Product, changes: L2UpdateChanges}): void {
 
   let newbids = [], newasks = [];
 
@@ -105,7 +113,7 @@ function handleMatchUpdate({
   time: timestamp,
   size: tradeSize,
   price: productPrice,
-}: { product_id: string, time: number, size: number, price: number }): void {
+}: { product_id: Product, time: number, size: number, price: number }): void {
   productData[productID].time = timestamp;
   productData[productID].size = tradeSize;
   productData[productID].price = productPrice;
@@ -114,7 +122,7 @@ function handleMatchUpdate({
 export function subscribeMatches(
   view: View,
   clientID: string,
-  productID: string,
+  productID: Product,
   clientSendFunction: (rawObject: Object) => void
 ) {
   let subscriber = subscribers.get(clientID);
@@ -143,7 +151,7 @@ export function subscribeMatches(
   }
 }
 
-export function subscribe(view: View, clientID: string, productID: string, clientSendFunction: (rawObject: Object) => void) {
+export function subscribe(view: View, clientID: string, productID: Product, clientSendFunction: (rawObject: Object) => void) {
   let subscriber = subscribers.get(clientID);
 
   if (subscriber == null) {
@@ -180,7 +188,7 @@ export function subscribe(view: View, clientID: string, productID: string, clien
   }
 }
 
-export function unsubscribe(clientID: string, productID: string) {
+export function unsubscribe(clientID: string, productID: Product) {
   let subscriber = subscribers.get(clientID);
 
   if (subscriber == null) {
