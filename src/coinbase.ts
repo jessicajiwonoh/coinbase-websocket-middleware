@@ -58,7 +58,7 @@ export function createSubscriber(id: string): Subscriber {
 ws.on('open', () => {
   console.log('Websocket connection established');
 
-  // Subscribe directly to coinbase server
+  // Subscribe directly to coinbase server.
   ws.send(
     JSON.stringify({
       type: 'subscribe',
@@ -108,6 +108,7 @@ ws.on('close', () => {
   ws.close();
 });
 
+// The handleL2Update function processes an array of changes to the level 2 order book for a given product.
 function handleL2Update({
   product_id: productID,
   changes,
@@ -126,14 +127,22 @@ function handleL2Update({
       newasks.push({ price, size });
     }
   }
+
+  // If there are any new bid updates, update the bids property of the
+  // productData object for the given product with the newbids array.
   if (newbids.length > 0) {
     productData[productID].bids = newbids;
   }
+
+  // If there are any new ask updates, update the asks property of the
+  // productData object for the given product with the newasks array.
   if (newasks.length > 0) {
     productData[productID].asks = newasks;
   }
 }
 
+// The handleMatchUpdate function updates time, size, and price properties of the productData object for a given product.
+// It is used to update the current state of the product with the details of a recent trade.
 function handleMatchUpdate({
   product_id: productID,
   time: timestamp,
@@ -145,9 +154,11 @@ function handleMatchUpdate({
   size: number;
   price: number;
 }): void {
-  productData[productID].time = timestamp;
-  productData[productID].size = tradeSize;
-  productData[productID].price = productPrice;
+  ({
+    time: productData[productID].time,
+    size: productData[productID].size,
+    price: productData[productID].price,
+  } = { time: timestamp, size: tradeSize, price: productPrice });
 }
 
 export function subscribeMatches(

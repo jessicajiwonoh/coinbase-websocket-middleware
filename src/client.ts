@@ -6,7 +6,7 @@ import {
   unsubscribe,
   showSystem,
   changeRefreshInterval,
-} from '../src/coinbase';
+} from './coinbase';
 import { Product, View } from './types';
 
 // Create a WebSocket server
