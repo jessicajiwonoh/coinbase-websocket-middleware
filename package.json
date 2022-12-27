@@ -1,0 +1,20 @@
+{
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.11.0"
+  },
+  "name": "coinbase-websocket-middleware",
+  "description": "This application works as a middleware from coinbase and the client. It was created by using NodeJS for the webserver that will intereact with the Coinbase Pro websocket API (https://docs.cloud.coinbase.com/exchange/docs/websocket-overview)and send the information through a websocket client.",
+  "version": "1.0.0",
+  "main": "client.js",
+  "devDependencies": {
+    "@types/jest": "^28.1.3",
+    "jest": "^28.1.3",
+    "ts-jest": "^28.0.5"
+  },
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest --forceExit"
+  },
+  "author": "Jess Oh",
+  "license": "ISC"
+}
