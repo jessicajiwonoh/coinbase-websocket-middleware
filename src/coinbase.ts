@@ -110,22 +110,22 @@ function handleL2Update({
   for (let [side, price, size] of changes) {
     if (side === 'buy') {
       newbids.push({ price, size });
+
+      // If there are any new bid updates, update the bids property of the
+      // productData object for the given product with the newbids array.
+      if (newbids.length > 0) {
+        productData[productID].bids = newbids;
+      }
     }
     if (side === 'sell') {
       newasks.push({ price, size });
+
+      // If there are any new ask updates, update the asks property of the
+      // productData object for the given product with the newasks array.
+      if (newasks.length > 0) {
+        productData[productID].asks = newasks;
+      }
     }
-  }
-
-  // If there are any new bid updates, update the bids property of the
-  // productData object for the given product with the newbids array.
-  if (newbids.length > 0) {
-    productData[productID].bids = newbids;
-  }
-
-  // If there are any new ask updates, update the asks property of the
-  // productData object for the given product with the newasks array.
-  if (newasks.length > 0) {
-    productData[productID].asks = newasks;
   }
 }
 
@@ -141,15 +141,9 @@ function handleMatchUpdate({
     return;
   }
 
-  ({
-    time: product.time,
-    size: product.size,
-    price: product.price,
-  } = {
-    time: timestamp,
-    size: tradeSize,
-    price: productPrice,
-  });
+  product.time = timestamp;
+  product.size = tradeSize;
+  product.price = productPrice;
 }
 
 // Subscribe to this middleware server from websocket client
