@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { processMessage } from './messageHandlers/messageProcessing';
+import { processMessage } from './messageProcessing';
 import { throwExpression } from './common';
 import {
   Ask,
@@ -81,7 +81,7 @@ ws.on('open', () => {
 // When the WebSocket connection receives a message, we parse it and determine its type.
 ws.on('message', (raw: WebSocket.RawData) => {
   const data = JSON.parse(raw.toString());
-  processMessage(ws, data);
+  processMessage(data);
 });
 
 ws.on('error', error => {
