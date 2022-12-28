@@ -10,6 +10,13 @@ export enum Product {
   /*'XRP-USD', */
 }
 
+export type MatchUpdateType = {
+  product_id: Product;
+  time: number;
+  size: number;
+  price: number;
+};
+
 export type ProductDataType = {
   [productID in Product]: {
     productID: productID;

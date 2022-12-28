@@ -2,6 +2,7 @@ import WebSocket from 'ws';
 import { throwExpression } from './common';
 import {
   L2UpdateChanges,
+  MatchUpdateType,
   Product,
   ProductDataType,
   Subscriber,
@@ -13,7 +14,7 @@ const URL = 'wss://ws-feed.exchange.coinbase.com';
 
 const ws = new WebSocket(URL);
 
-const productDataPrototype = {
+const productDataDefaults = {
   bids: [],
   asks: [],
   time: null,
@@ -21,24 +22,12 @@ const productDataPrototype = {
   price: null,
 };
 
-/**
- * In order for productData to match ProductDataType,
- * typescript has to statically recognize that all the values of the Product enum
- * are indeed keys of the productData object. That is why we have so much code repetition.
- *
- * Unfortunately, typescript does not Object.fromEntries(Object.values(Product).map(...))
- * as sufficient evidence that all Product values are indeed present.
- */
+// The spread operator is used to copy the properties of productDataPrototype into a new object,
+// and then the productID property is added or overwritten for each object in productData.
 const productData: ProductDataType = {
-  'BTC-USD': Object.assign(Object.create(productDataPrototype), {
-    productID: 'BTC-USD',
-  }),
-  'ETH-USD': Object.assign(Object.create(productDataPrototype), {
-    productID: 'ETH-USD',
-  }),
-  'LTC-USD': Object.assign(Object.create(productDataPrototype), {
-    productID: 'LTC-USD',
-  }),
+  'BTC-USD': { ...productDataDefaults, productID: Product.BTCUSD },
+  'ETH-USD': { ...productDataDefaults, productID: Product.ETHUSD },
+  'LTC-USD': { ...productDataDefaults, productID: Product.LTCUSD },
 };
 
 const subscribers: Subscribers = new Map();
@@ -141,24 +130,89 @@ function handleL2Update({
   }
 }
 
-// The handleMatchUpdate function updates time, size, and price properties of the productData object for a given product.
-// It is used to update the current state of the product with the details of a recent trade.
 function handleMatchUpdate({
   product_id: productID,
   time: timestamp,
   size: tradeSize,
   price: productPrice,
-}: {
-  product_id: Product;
-  time: number;
-  size: number;
-  price: number;
-}): void {
+}: MatchUpdateType): void {
+  const product = productData[productID];
+
+  if (!product) {
+    return;
+  }
+
   ({
-    time: productData[productID].time,
-    size: productData[productID].size,
-    price: productData[productID].price,
-  } = { time: timestamp, size: tradeSize, price: productPrice });
+    time: product.time,
+    size: product.size,
+    price: product.price,
+  } = {
+    time: timestamp,
+    size: tradeSize,
+    price: productPrice,
+  });
+}
+
+// Subscribe to this middleware server from websocket client
+export function subscribe(
+  view: View,
+  clientID: string,
+  productID: Product,
+  clientSendFunction: (rawObject: Object) => void,
+) {
+  // Retrieve the subscriber object for the given client ID from the subscribers map.
+  // Or create a new subscriber object if it doesn't exist.
+  let subscriber = subscribers.get(clientID);
+
+  if (subscriber == null) {
+    subscriber = createSubscriber(clientID);
+    subscribers.set(clientID, subscriber);
+  }
+
+  // Add the given product to the subscribedProducts set.
+  subscriber.subscribedProducts.add(productID);
+
+  if (view === View.Price) {
+    // Kick off a publishing loop if the current view wasn't already Price
+    if (subscriber.currentView !== View.Price) {
+      subscriber.currentView = View.Price;
+
+      // Create a new scope for the publishOnInterval function, then called immediately.
+      // This allows publishOnInterval function to be called recursively via the setTimeout function without polluting the global scope.
+      (function publishOnInterval() {
+        const subscriber =
+          subscribers.get(clientID) ??
+          throwExpression(`Unexpected null clientID ${clientID}`);
+
+        if (subscriber.currentView === View.Price) {
+          for (let subscribedProduct of subscriber.subscribedProducts) {
+            clientSendFunction({
+              subscribedProduct,
+              bids: productData[subscribedProduct].bids,
+              asks: productData[subscribedProduct].asks,
+            });
+          }
+          if (subscriber.subscribedProducts.size === 0) {
+            return;
+          }
+          setTimeout(publishOnInterval, subscriber.refreshInterval);
+        }
+      })();
+    }
+  }
+}
+
+// The unsubscribe function removes a subscription for a client to stop receiving updates for a given product.
+export function unsubscribe(clientID: string, productID: Product) {
+  let subscriber = subscribers.get(clientID);
+
+  if (subscriber == null) {
+    console.log('There is no subscriber...');
+    return;
+  }
+
+  // Remove the given product from the subscribedProducts set.
+  subscriber.subscribedProducts.delete(productID);
 }
 
 // The subscribeMatches function sets up a subscription for a client, identified by their clientID.
@@ -194,66 +248,6 @@ export function subscribeMatches(
     }
     matchProducts.add(productID);
   }
-}
-
-// Subscribe to this middleware server from websocket client
-export function subscribe(
-  view: View,
-  clientID: string,
-  productID: Product,
-  clientSendFunction: (rawObject: Object) => void,
-) {
-  // Retrieve the subscriber object for the given client ID from the subscribers map.
-  // Or create a new subscriber object if it doesn't exist.
-  let subscriber = subscribers.get(clientID);
-
-  if (subscriber == null) {
-    subscriber = createSubscriber(clientID);
-    subscribers.set(clientID, subscriber);
-  }
-
-  // Add the given product to the subscribedProducts set.
-  subscriber.subscribedProducts.add(productID);
-
-  if (view === View.Price) {
-    // Kick off a publishing loop if the current view wasn't already Price
-    if (subscriber.currentView !== View.Price) {
-      subscriber.currentView = View.Price;
-
-      (function publishOnInterval() {
-        const subscriber =
-          subscribers.get(clientID) ??
-          throwExpression(`Unexpected null clientID ${clientID}`);
-
-        if (subscriber.currentView === View.Price) {
-          for (let subscribedProduct of subscriber.subscribedProducts) {
-            clientSendFunction({
-              subscribedProduct,
-              bids: productData[subscribedProduct].bids,
-              asks: productData[subscribedProduct].asks,
-            });
-          }
-          if (subscriber.subscribedProducts.size === 0) {
-            return;
-          }
-          setTimeout(publishOnInterval, subscriber.refreshInterval);
-        }
-      })();
-    }
-  }
-}
-
-// The unsubscribe function removes a subscription for a client to stop receiving updates for a given product.
-export function unsubscribe(clientID: string, productID: Product) {
-  let subscriber = subscribers.get(clientID);
-
-  if (subscriber == null) {
-    console.log('There is no subscriber...');
-    return;
-  }
-
-  // Remove the given product from the subscribedProducts set.
-  subscriber.subscribedProducts.delete(productID);
 }
 
 // The showSystem function sends a list of the subscribed products for a client, identified by their clientID, to the client.
