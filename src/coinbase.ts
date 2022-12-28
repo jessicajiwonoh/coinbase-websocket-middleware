@@ -1,14 +1,15 @@
 import WebSocket from 'ws';
+import { processMessage } from './messageHandlers/messageProcessing';
 import { throwExpression } from './common';
 import {
-  L2UpdateChanges,
-  MatchUpdateType,
+  Ask,
+  Bid,
   Product,
   ProductDataType,
   Subscriber,
   Subscribers,
-  View,
-} from './types';
+} from './types/index';
+import { View } from './types/view';
 
 const URL = 'wss://ws-feed.exchange.coinbase.com';
 
@@ -18,8 +19,8 @@ const subscribers: Subscribers = new Map();
 const matchProducts: Set<Product> = new Set();
 
 const productDataDefaults = {
-  bids: [],
-  asks: [],
+  bids: Array<Bid>(),
+  asks: Array<Ask>(),
   time: null,
   size: null,
   price: null,
@@ -32,6 +33,27 @@ const productData: ProductDataType = {
   'ETH-USD': { ...productDataDefaults, productID: Product.ETHUSD },
   'LTC-USD': { ...productDataDefaults, productID: Product.LTCUSD },
 };
+
+// These functions update the specified field in the productData object for the given product.
+export function updateBids(productID: Product, newBids: Array<Bid>) {
+  productData[productID].bids = newBids;
+}
+
+export function updateAsks(productID: Product, newAsks: Array<Ask>) {
+  productData[productID].asks = newAsks;
+}
+
+export function updateTime(productID: Product, newTime: number) {
+  productData[productID].time = newTime;
+}
+
+export function updateSize(productID: Product, newSize: number) {
+  productData[productID].size = newSize;
+}
+
+export function updatePrice(productID: Product, newPrice: number) {
+  productData[productID].price = newPrice;
+}
 
 // The createSubscriber function creates and returns an object representing a client that is subscribed to the server.
 export function createSubscriber(id: string): Subscriber {
@@ -59,32 +81,7 @@ ws.on('open', () => {
 // When the WebSocket connection receives a message, we parse it and determine its type.
 ws.on('message', (raw: WebSocket.RawData) => {
   const data = JSON.parse(raw.toString());
-  const { type } = data;
-
-  switch (type) {
-    case 'subscriptions':
-      for (let channel of data.channels) {
-        console.log(
-          `Product IDs subscribed to: ${channel.name} channel, ${channel.product_ids}`,
-        );
-      }
-      break;
-    case 'snapshot':
-      break;
-    case 'l2update':
-      handleL2Update(data);
-      break;
-    case 'last_match':
-    case 'match':
-      handleMatchUpdate(data);
-      break;
-    case 'error':
-      console.log(data);
-      break;
-    default:
-      console.log(`${type} type not supported`);
-      ws.close();
-  }
+  processMessage(ws, data);
 });
 
 ws.on('error', error => {
@@ -95,56 +92,6 @@ ws.on('close', () => {
   console.log('Websocket connection closed');
   ws.close();
 });
-
-// The handleL2Update function processes an array of changes to the level 2 order book for a given product.
-function handleL2Update({
-  product_id: productID,
-  changes,
-}: {
-  product_id: Product;
-  changes: L2UpdateChanges;
-}): void {
-  const newbids = [],
-    newasks = [];
-
-  for (let [side, price, size] of changes) {
-    if (side === 'buy') {
-      newbids.push({ price, size });
-
-      // If there are any new bid updates, update the bids property of the
-      // productData object for the given product with the newbids array.
-      if (newbids.length > 0) {
-        productData[productID].bids = newbids;
-      }
-    }
-    if (side === 'sell') {
-      newasks.push({ price, size });
-
-      // If there are any new ask updates, update the asks property of the
-      // productData object for the given product with the newasks array.
-      if (newasks.length > 0) {
-        productData[productID].asks = newasks;
-      }
-    }
-  }
-}
-
-function handleMatchUpdate({
-  product_id: productID,
-  time: timestamp,
-  size: tradeSize,
-  price: productPrice,
-}: MatchUpdateType): void {
-  const product = productData[productID];
-
-  if (!product) {
-    return;
-  }
-
-  product.time = timestamp;
-  product.size = tradeSize;
-  product.price = productPrice;
-}
 
 // Subscribe to this middleware server from websocket client
 export function subscribe(

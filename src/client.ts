@@ -7,7 +7,7 @@ import {
   showSystem,
   changeRefreshInterval,
 } from './coinbase';
-import { Product, View } from './types';
+import { Product, View } from './types/index';
 
 // Create a WebSocket server
 console.log('WebSocket server starting...');
@@ -19,10 +19,12 @@ wss.on('connection', ws => {
 
   const clientId = crypto.randomUUID();
 
+  // MOVE THIS OUTSIDE
   function sendToClient(rawObject: Object): void {
     ws.send(JSON.stringify(rawObject));
   }
 
+  // TAKE IN OBJECT AND USE SWITCH INSTEAD OF NESTED IF's
   ws.on('message', requestMessage => {
     const tokens = requestMessage.toString().split(' ');
 
