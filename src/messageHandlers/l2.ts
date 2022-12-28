@@ -1,7 +1,7 @@
 import { updateAsks, updateBids } from '../coinbase';
 import { Product, L2UpdateChanges } from '../types/index';
 
-// The handleL2Update function processes an array of changes to the level 2 order book for a given product.
+// The l2updateMessage function processes an array of changes to the level 2 order book for a given product.
 export function l2updateMessage({
   product_id: productID,
   changes,
@@ -19,7 +19,6 @@ export function l2updateMessage({
       // If there are any new bid updates, update the bids property of the
       // productData object for the given product with the newbids array.
       if (newbids.length > 0) {
-        // updatebids()
         updateBids(productID, newbids);
       }
     }

@@ -15,13 +15,13 @@ export function processMessage(
   ws: WebSocket,
   data: MatchUpdateType & {
     type: MessageType;
-    channels: ChannelType;
+    channels: { name: ChannelType; product_ids: Product }[];
     product_id: Product;
     changes: L2UpdateChanges;
   },
 ) {
   if (!Object.values(MessageType).includes(data.type)) {
-    unsupportedMessage(ws, data);
+    unsupportedMessage(data);
   } else if (data.type === MessageType.Subscriptions) {
     subscriptionsMessage(data);
   } else if (data.type === MessageType.L2update) {
