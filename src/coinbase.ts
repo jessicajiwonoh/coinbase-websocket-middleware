@@ -14,6 +14,9 @@ const URL = 'wss://ws-feed.exchange.coinbase.com';
 
 const ws = new WebSocket(URL);
 
+const subscribers: Subscribers = new Map();
+const matchProducts: Set<Product> = new Set();
+
 const productDataDefaults = {
   bids: [],
   asks: [],
@@ -29,10 +32,6 @@ const productData: ProductDataType = {
   'ETH-USD': { ...productDataDefaults, productID: Product.ETHUSD },
   'LTC-USD': { ...productDataDefaults, productID: Product.LTCUSD },
 };
-
-const subscribers: Subscribers = new Map();
-
-const matchProducts: Set<Product> = new Set();
 
 // The createSubscriber function creates and returns an object representing a client that is subscribed to the server.
 export function createSubscriber(id: string): Subscriber {
@@ -282,5 +281,5 @@ export function changeRefreshInterval(
   // Update the refreshInterval property of the subscriber object with the given refresh interval.
   subscriber.refreshInterval = refreshInterval;
 
-  clientSendFunction(subscriber);
+  clientSendFunction({ refreshInterval: subscriber.refreshInterval });
 }

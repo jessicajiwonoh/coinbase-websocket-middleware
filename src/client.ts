@@ -49,7 +49,7 @@ wss.on('connection', ws => {
     }
 
     // If the first token of the message is in the Product enum, we store it in the `product` variable.
-    if ((Object.values(Product) as string[]).includes(tokens[0])) {
+    if (Object.values<string>(Product).includes(tokens[0])) {
       const product = tokens[0] as Product;
 
       // If there is a second token, we check if it is "m" or "u".
