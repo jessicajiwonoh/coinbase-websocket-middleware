@@ -1,7 +1,7 @@
 # Coinbase Websocket Middleware
 
 This application works as a middleware from coinbase and the client.
-It was created by using NodeJS for the webserver that will intereact with the Coinbase Pro websocket API (https://docs.cloud.coinbase.com/exchange/docs/websocket-overview)and send the information through a websocket client.
+It was created by using NodeJS for the webserver that will intereact with the Coinbase Pro websocket API (https://docs.cloud.coinbase.com/exchange/docs/websocket-overview) and send the information through a websocket client.
 
 ## Requirements
 

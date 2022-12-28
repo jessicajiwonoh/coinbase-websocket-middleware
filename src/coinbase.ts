@@ -203,7 +203,7 @@ export function subscribe(
 
 // The unsubscribe function removes a subscription for a client to stop receiving updates for a given product.
 export function unsubscribe(clientID: string, productID: Product) {
-  let subscriber = subscribers.get(clientID);
+  const subscriber = subscribers.get(clientID);
 
   if (subscriber == null) {
     console.log('There is no subscriber...');
@@ -254,9 +254,9 @@ export function showSystem(
   clientID: string,
   clientSendFunction: (rawObject: Object) => void,
 ) {
-  let subscriber = subscribers.get(clientID);
+  const subscriber = subscribers.get(clientID);
   // Create an empty array to hold the subscribed products of the subscriber object.
-  let systemProducts = [];
+  const systemProducts = [];
 
   if (subscriber == null) {
     console.log('There is no subscriber...');
@@ -274,7 +274,7 @@ export function changeRefreshInterval(
   refreshInterval: number,
   clientSendFunction: (rawObject: Object) => void,
 ): void {
-  let subscriber =
+  const subscriber =
     subscribers.get(clientID) ??
     throwExpression(`Unexpected null clientID ${clientID}`);
 
