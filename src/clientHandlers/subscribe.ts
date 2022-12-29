@@ -1,4 +1,4 @@
-import { createSubscriber } from '../coinbase';
+import { createSubscriber } from '../coinbaseWebsocket';
 import { throwExpression } from '../common';
 import { Product, View } from '../types/index';
 import { productData, subscribers } from '../subscriptionData';
