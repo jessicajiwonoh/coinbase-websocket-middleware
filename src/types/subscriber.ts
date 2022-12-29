@@ -1,5 +1,4 @@
-import { Product } from './product';
-import { View } from './view';
+import { Product, View } from './index';
 
 export type Subscriber = {
   id: string;

@@ -1,5 +1,4 @@
-import { ChannelType } from '../types/channelType';
-import { Product } from '../types/product';
+import { ChannelType, Product } from '../types/index';
 
 export function subscriptionsMessage(data: {
   channels: { name: ChannelType; product_ids: Product }[];

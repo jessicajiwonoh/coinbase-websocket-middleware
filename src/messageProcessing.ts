@@ -1,7 +1,9 @@
-import { l2updateMessage } from './messageHandlers/l2';
-import { matchUpdateMessage } from './messageHandlers/match';
-import { subscriptionsMessage } from './messageHandlers/subscriptions';
-import { unsupportedMessage } from './messageHandlers/unsupported';
+import {
+  l2updateMessage,
+  matchUpdateMessage,
+  subscriptionsMessage,
+  unsupportedMessage,
+} from './messageHandlers/index';
 import {
   L2UpdateChanges,
   Product,

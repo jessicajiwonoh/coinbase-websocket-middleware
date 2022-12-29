@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { productData } from './clientHandlers/subscriptionData';
+import { productData } from './clientHandlers/index';
 import { processMessage } from './messageProcessing';
 import { Ask, Bid, Product, Subscriber } from './types/index';
 

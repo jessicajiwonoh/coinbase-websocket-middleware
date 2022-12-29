@@ -1,4 +1,4 @@
-import { Product } from './product';
+import { Product } from './index';
 
 export interface MatchUpdateType {
   product_id: Product;
