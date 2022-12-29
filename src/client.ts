@@ -1,13 +1,13 @@
 import { WebSocketServer } from 'ws';
 import * as crypto from 'crypto';
+import { Product, View } from './types/index';
 import {
+  changeRefreshInterval,
+  showSystem,
   subscribe,
   subscribeMatches,
   unsubscribe,
-  showSystem,
-  changeRefreshInterval,
-} from './coinbase';
-import { Product, View } from './types/index';
+} from './clientHandlers/index';
 
 // Create a WebSocket server
 console.log('WebSocket server starting...');
