@@ -19,7 +19,6 @@ wss.on('connection', ws => {
 
   const clientId = crypto.randomUUID();
 
-  // MOVE THIS OUTSIDE
   function sendToClient(rawObject: Object): void {
     ws.send(JSON.stringify(rawObject));
   }

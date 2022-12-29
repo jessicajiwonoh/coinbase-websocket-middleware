@@ -13,6 +13,14 @@ All notable changes from v0 to v1 are documented in this file.
 * The `changeRefreshInterval` throws an error when the `clientID` is `null`. Pass only `refreshInterval` to `clientSendFunction` (v1 addition).
 * Add `prettier` (v1 addition).
 
+## Latest Changes
+
+* Make filename more descriptive to `coinbaseWebsocket`.
+* Move `productDataUpdater` and `clientHandlers` outside of coinbase.
+* Make data type stricter instead of any for `unsupportedMessage` function.
+* Make type stricter for `channels`.
+* Separate `types` and `messageHandlers`.
+
 ## Bug Fixes
 
 * Change `refreshInterval` in client to integer from string.
