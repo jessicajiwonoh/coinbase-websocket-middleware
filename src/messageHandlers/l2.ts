@@ -1,4 +1,4 @@
-import { updateAsks, updateBids } from '../coinbase';
+import { updateAsks, updateBids } from '../productDataUpdater';
 import { Product, L2UpdateChanges } from '../types/index';
 
 // The l2updateMessage function processes an array of changes to the level 2 order book for a given product.

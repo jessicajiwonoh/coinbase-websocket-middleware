@@ -1,5 +1,5 @@
 import { throwExpression } from '../common';
-import { subscribers } from './index';
+import { subscribers } from '../subscriptionData';
 
 export function changeRefreshInterval(
   clientID: string,

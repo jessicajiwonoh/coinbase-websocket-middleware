@@ -1,5 +1,5 @@
 import { Product } from '../types/index';
-import { subscribers } from './index';
+import { subscribers } from '../subscriptionData';
 
 // The unsubscribe function removes a subscription for a client to stop receiving updates for a given product.
 export function unsubscribe(clientID: string, productID: Product) {

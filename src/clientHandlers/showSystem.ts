@@ -1,4 +1,4 @@
-import { subscribers } from './index';
+import { subscribers } from '../subscriptionData';
 
 // The showSystem function sends a list of the subscribed products for a client, identified by their clientID, to the client.
 export function showSystem(

@@ -1,10 +1,4 @@
-import {
-  Ask,
-  Bid,
-  Product,
-  ProductDataType,
-  Subscribers,
-} from '../types/index';
+import { Ask, Bid, Product, ProductDataType, Subscribers } from './types/index';
 
 export const subscribers: Subscribers = new Map();
 export const matchProducts: Set<Product> = new Set();

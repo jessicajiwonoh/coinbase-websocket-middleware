@@ -1,4 +1,4 @@
-import { updatePrice, updateSize, updateTime } from '../coinbase';
+import { updatePrice, updateSize, updateTime } from '../productDataUpdater';
 import { MatchUpdateType } from '../types/index';
 
 export function matchUpdateMessage({

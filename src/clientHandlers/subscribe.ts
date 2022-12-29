@@ -1,7 +1,7 @@
 import { createSubscriber } from '../coinbase';
 import { throwExpression } from '../common';
 import { Product, View } from '../types/index';
-import { productData, subscribers } from './index';
+import { productData, subscribers } from '../subscriptionData';
 
 // Subscribe to this middleware server from websocket client
 export function subscribe(

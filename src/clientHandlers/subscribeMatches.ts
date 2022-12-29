@@ -1,6 +1,6 @@
 import { createSubscriber } from '../coinbase';
 import { Product, View } from '../types/index';
-import { matchProducts, productData, subscribers } from './index';
+import { matchProducts, productData, subscribers } from '../subscriptionData';
 
 // The subscribeMatches function sets up a subscription for a client, identified by their clientID.
 export function subscribeMatches(
