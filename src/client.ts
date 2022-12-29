@@ -13,17 +13,16 @@ import {
 console.log('WebSocket server starting...');
 const wss = new WebSocketServer({ port: 8080 });
 
+function sendToClient(ws: import('ws').WebSocket, rawObject: Object): void {
+  ws.send(JSON.stringify(rawObject));
+}
+
 // When a client connects to the WebSocket server, it sets up an event listener for incoming messages
 wss.on('connection', ws => {
   console.log('Client connected');
 
   const clientId = crypto.randomUUID();
 
-  function sendToClient(rawObject: Object): void {
-    ws.send(JSON.stringify(rawObject));
-  }
-
-  // TAKE IN OBJECT AND USE SWITCH INSTEAD OF NESTED IF's
   ws.on('message', requestMessage => {
     const tokens = requestMessage.toString().split(' ');
 
@@ -35,10 +34,14 @@ wss.on('connection', ws => {
         console.log(
           `Changing the refresh interval of the current view to value: ${tokens[1]}`,
         );
-        changeRefreshInterval(clientId, refreshInterval, sendToClient);
+        changeRefreshInterval(clientId, refreshInterval, rawObject => {
+          sendToClient(ws, rawObject);
+        });
         // If there is no second token, we show the system view.
       } else if (tokens.length === 1) {
-        showSystem(clientId, sendToClient);
+        showSystem(clientId, rawObject => {
+          sendToClient(ws, rawObject);
+        });
         // If there are more than two tokens, we log an error message.
       } else {
         console.log('Unsupported message, try again');
@@ -57,7 +60,9 @@ wss.on('connection', ws => {
       if (tokens.length === 2) {
         // If it is "m", we subscribe to the matches view for the specified product.
         if (tokens[1] === 'm') {
-          subscribeMatches(View.Match, clientId, product, sendToClient);
+          subscribeMatches(View.Match, clientId, product, rawObject => {
+            sendToClient(ws, rawObject);
+          });
         }
         // If it is "u", we unsubscribe from the specified product.
         if (tokens[1] === 'u') {
@@ -65,7 +70,9 @@ wss.on('connection', ws => {
         }
         // If there is no second token, we subscribe to the price view for the specified product.
       } else if (tokens.length === 1) {
-        subscribe(View.Price, clientId, product, sendToClient);
+        subscribe(View.Price, clientId, product, rawObject => {
+          sendToClient(ws, rawObject);
+        });
       } else {
         console.log('Unsupported message, try again');
       }
